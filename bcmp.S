@@ -3,13 +3,16 @@
 // r3: char *p1
 // r4: char *p2
 // r5: int n
+.text
+.align 4
 .globl bcmp_custom
 bcmp_custom:
-  srdi %r6, %r5, 3
+  srdi %r6, %r5, 4
   addi %r6, %r6, 1
   mtctr %r6
   li %r7, 0x3f
   li %r8, 0x10
+.align 4
 loop:
   and %r6, %r5, %r7
   cmpdi %r5, 0x10
