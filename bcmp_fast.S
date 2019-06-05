@@ -7,38 +7,47 @@
 .align 4
 .globl bcmp_custom
 bcmp_custom:
-  srdi %r6, %r5, 4
-  addi %r6, %r6, 1
+  srdi %r6, %r5, 5
+  addi %r6, %r6, 2
   mtctr %r6
-  li %r7, 0x0f
-  and %r6, %r5, %r7
-  sldi %r6, %r6, 56
-  li %r8, 0x10
-  sldi %r8, %r8, 56
+  and. %r6, %r5, 0x1f
+  bdz loop_end
 .align 4
 loop:
-  cmpdi %r5, 0x10
-  isellt %r7, %r6, %r8
-  lxvl %vs33, %r3, %r7
-  lxvl %vs34, %r4, %r7
+  lxv %vs33, 0(%r3)
+  lxv %vs34, 0(%r4)
   vcmpequb. %v3, %v2, %v1
   blt cr6, cont
-  li %r3, 0
-  blr
+b return_false
 cont:
-  addi %r3, %r3, 16
-  addi %r4, %r4, 16
-  cmpdi %r5, 0x10
-  isellt %r7, %r6, %r8
+  lxv %vs33, 0x10(%r3)
+  lxv %vs34, 0x10(%r4)
+  vcmpequb. %v3, %v2, %v1
+  blt cr6, cont2
+  b return_false
+cont2:
+  addi %r3, %r3, 0x20
+  addi %r4, %r4, 0x20
+  bdnz loop
+loop_end:
+  sldi %r7, %r6, 56
   lxvl %vs33, %r3, %r7
   lxvl %vs34, %r4, %r7
   vcmpequb. %v3, %v2, %v1
-  blt cr6, cont2
+  blt cr6, cont3
+  b return_false
+cont3:
+  subi %r6, %r6, 16
+  cmpdi %r6, 0
+  blt return_true
+  sldi %r7, %r6, 56
+  lxvl %vs33, %r3, %r7
+  lxvl %vs34, %r4, %r7
+  vcmpequb. %v3, %v2, %v1
+  blt cr6, return_true
+return_false:
   li %r3, 0
   blr
-cont2:
-  addi %r3, %r3, 16
-  addi %r4, %r4, 16
-  bdnz loop
+return_true:
   li %r3, 1
   blr
